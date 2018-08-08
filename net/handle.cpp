@@ -9,6 +9,7 @@
 Handle::Handle() {
 	_socket = -1;
 	_active = false;
+	_send_posted = false;
 	_total_ping_time = 0;
 	_last_ping_send_time = 0;
 	_ping_times = 0;
@@ -54,7 +55,7 @@ int Handle::prerecv() {
 int Handle::presend() {
 	WSABUF buf;
 	_send_mutex.lock();
-	if (_send_cache.empty()) {
+	if (_send_posted || _send_cache.empty()) {
 		_send_mutex.unlock();
 		return 0;
 	}
@@ -72,6 +73,9 @@ int Handle::presend() {
 		return -1;
 	}
 
+	_send_mutex.lock();
+	_send_posted = true;
+	_send_mutex.unlock();
 	return 0;
 }
 
@@ -90,7 +94,10 @@ void Handle::recv_complete(size_t sz) {
 
 void Handle::send_complete(size_t sz) {
 	_send_mutex.lock();
-	_send_cache.erase(_send_cache.begin(), _send_cache.begin() + sz);
+	if (_send_posted) {
+		_send_cache.erase(_send_cache.begin(), _send_cache.begin() + sz);
+		_send_posted = false;
+	}
 	_send_mutex.unlock();
 }
 
@@ -120,22 +127,23 @@ void Handle::active(bool act) {
 }
 
 void Handle::update() {
-	presend();
+	if (presend()) active(false);
+
 	update_ping();
 
 	while (true) {
 		char *packet[64] = { 0 };
 		size_t len = 0;
 		_recv_mutex.lock();
-		len = _send_cache.size();
+		len = _recved_packet.size();
 		len = len > 64 ? 64 : len;
 		if (!len) {
 			_recv_mutex.unlock();
 			return;
 		}
-		memcpy(packet, &_send_cache[0], len);
-		_send_cache.erase(_send_cache.begin(), _send_cache.begin() + len);
-		_send_mutex.unlock();
+		memcpy(packet, &_recved_packet[0], len * sizeof(char *));
+		_recved_packet.erase(_recved_packet.begin(), _recved_packet.begin() + len);
+		_recv_mutex.unlock();
 
 		for (size_t i = 0; i < len; ++i) {
 			// todo: call the on msg function
@@ -145,7 +153,7 @@ void Handle::update() {
 			} else {
 				luawrapper::call<void>(Robot::instance()->lvm(), "onNetPacket", this, msg);
 			}
-			free((void *)msg);
+			free((char *)msg);
 		}
 	}
 }

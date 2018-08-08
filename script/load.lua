@@ -1,5 +1,5 @@
 
-local robot_num = 1000;
+local robot_num = 100;
 local game_host = "192.168.36.252";
 local game_port = 5221;
 local conn_num = 0;
@@ -37,12 +37,22 @@ local function calcAvgPing()
 		handle = v["handle"];
 		total_avg_ping = total_avg_ping + handle:avg_ping();
 	end
-	
-	return total_avg_ping/conn_num;
+
+	if conn_num > 0 then
+		return total_avg_ping/conn_num;
+	else
+		return 0;
+	end
+end
+
+local function
+
+local function perfShow()
+	avg_ping
 end
 
 function update()
-	if ms_proccess() - last_calc_ping_time >= 100000 then
+	if ms_proccess() - last_calc_ping_time >= 35000 then
 		last_calc_ping_time = ms_proccess();
 		print("ping:"..calcAvgPing().."\n");
 	end

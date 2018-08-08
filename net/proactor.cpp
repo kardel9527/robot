@@ -88,6 +88,7 @@ Handle* Proactor::connect(const char *ip, short port) {
 	CreateIoCompletionPort((HANDLE)s, _completion_handle, (ULONG_PTR)h, 0);
 	h->active(true);
 	_active_handle[s] = h;
+	h->prerecv();
 
 	return h;
 }

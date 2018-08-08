@@ -35,7 +35,7 @@ private:
 
 		char* recv_ptr() const {
 			assert(_packet_len >= _recved_len);
-			return _packet_len ? _recv_ptr + _packet_len - _recved_len : (char *)&_packet_len;
+			return _packet_len ? _recv_ptr +  _recved_len : (char *)&_packet_len;
 		}
 
 		size_t recv_len() const {
@@ -98,7 +98,7 @@ public:
 
 	void update();
 
-	float avg_ping() const { return (float)_total_ping_time / _ping_times; }
+	float avg_ping() const { return _ping_times ? ((float)_total_ping_time / _ping_times) : 0; }
 	unsigned long long send_bytes() const { return _total_send_bytes;  }
 	unsigned long long recv_bytes() const { return _total_recv_bytes;  }
 	unsigned long long total_bytes() const { return send_bytes() + recv_bytes();  }
@@ -113,6 +113,7 @@ private:
 private:
 	SOCKET _socket;
 	volatile bool _active;
+	volatile bool _send_posted;
 
 	uint64_t _total_ping_time;
 	uint64_t _last_ping_send_time;

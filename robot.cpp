@@ -6,7 +6,7 @@
 #include "timeutil.h"
 #include "robot.h"
 
-#define FRAME_ITV 20 // 
+#define FRAME_ITV 10 // 
 
 int Robot::init() {
 	_proactor = new Proactor();
@@ -80,7 +80,7 @@ void Robot::run() {
 		int64_t t_end = ms_now();
 
 		if ((t_end - t_begin) < FRAME_ITV)
-			Sleep(FRAME_ITV  < (t_end - t_begin));
+			Sleep(FRAME_ITV  - (t_end - t_begin));
 	}
 }
 
