@@ -4,9 +4,16 @@
 #include "net/proactor.h"
 #include "net/packet.h"
 #include "timeutil.h"
+#include "md5.h"
 #include "robot.h"
 
-#define FRAME_ITV 10 // 
+#define FRAME_ITV 30 // 
+
+static const char* lua_md5(const char *src) {
+	static char buff[33] = { 0 };
+	md5_make(src, buff, sizeof(buff));
+	return buff;
+}
 
 int Robot::init() {
 	_proactor = new Proactor();
@@ -38,6 +45,7 @@ int Robot::init() {
 
 	// msg interface
 	luawrapper::object_reg<MsgHead>(_lvm, "MsgHead");
+	luawrapper::object_method_reg<MsgHead>(_lvm, "opcode", &MsgHead::opcode);
 	luawrapper::object_method_reg<MsgHead>(_lvm, "data", &MsgHead::data);
 	luawrapper::object_method_reg<MsgHead>(_lvm, "len", &MsgHead::len);
 
@@ -51,9 +59,12 @@ int Robot::init() {
 	// register global function
 	luawrapper::def(_lvm, "ms_proccess", ms_proccess);
 
+	// register md5 function
+	luawrapper::def(_lvm, "md5", lua_md5);
+
 	// do the init lua script
 	luawrapper::dofile(_lvm, "./script/load.lua");
-
+	
 	// invoke the start script function
 	luawrapper::call<void>(_lvm, "onStart");
 
@@ -80,7 +91,11 @@ void Robot::run() {
 		int64_t t_end = ms_now();
 
 		if ((t_end - t_begin) < FRAME_ITV)
-			Sleep(FRAME_ITV  - (t_end - t_begin));
+		{
+			unsigned long delay = FRAME_ITV - (t_end - t_begin);
+			Sleep(delay);
+		}
+
 	}
 }
 

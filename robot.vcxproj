@@ -89,13 +89,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>.\3rd\lua-5.3.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\server\code\src\lib\pbc;.\3rd\lua-5.3.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>.\3rd\lua-5.3.4\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libluad.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblua.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -151,6 +151,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="luawrapper.h" />
+    <ClInclude Include="md5.h" />
     <ClInclude Include="net\handle.h" />
     <ClInclude Include="net\packet.h" />
     <ClInclude Include="net\proactor.h" />
@@ -160,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="luawrapper.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="md5.c" />
     <ClCompile Include="net\handle.cpp" />
     <ClCompile Include="net\proactor.cpp" />
     <ClCompile Include="robot.cpp" />

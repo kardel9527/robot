@@ -38,6 +38,9 @@ int Handle::prerecv() {
 	WSABUF buf;
 	buf.buf = _recv_helper.recv_ptr();
 	buf.len = _recv_helper.recv_len();
+	if (_recv_helper._recved_len == 0 && buf.len < 4) {
+		assert(false);
+	}
 
 	ZeroMemory(&_recv_overlapped, sizeof(_recv_overlapped));
 	_recv_overlapped._op = OT_RECV_POSTED;
@@ -46,6 +49,7 @@ int Handle::prerecv() {
 	int ret = WSARecv(handle(), &buf, 1, (LPDWORD)&_recv_overlapped._io_size, (LPDWORD)&_recv_overlapped._flag, &_recv_overlapped, 0);
 	if (ret == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING) {
 		// failed.
+		int err = WSAGetLastError();
 		return -1;
 	}
 
@@ -67,15 +71,15 @@ int Handle::presend() {
 	_send_overlapped._op = OT_SEND_POSTED;
 	_send_overlapped._handle = this;
 
+	_send_posted = true;
 	int ret = WSASend(handle(), &buf, 1, (LPDWORD)&_send_overlapped._io_size, _send_overlapped._flag, &_send_overlapped, NULL);
 	if (ret == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING) {
 		// error
+		int err = WSAGetLastError();
+		_send_posted = false;
 		return -1;
 	}
 
-	_send_mutex.lock();
-	_send_posted = true;
-	_send_mutex.unlock();
 	return 0;
 }
 
@@ -94,6 +98,7 @@ void Handle::recv_complete(size_t sz) {
 
 void Handle::send_complete(size_t sz) {
 	_send_mutex.lock();
+	assert(_send_posted);
 	if (_send_posted) {
 		_send_cache.erase(_send_cache.begin(), _send_cache.begin() + sz);
 		_send_posted = false;
@@ -102,11 +107,19 @@ void Handle::send_complete(size_t sz) {
 }
 
 void Handle::send(short op, const char *data, size_t len) {
+	_total_send_bytes += len + sizeof(MsgHead);
+
 	_send_mutex.lock();
+
+	if (_send_cache.size() >= 10000000) {
+		_send_mutex.unlock();
+		return;
+		//active(false);
+	}
+
 	MsgHead head;
 	head._size = sizeof(MsgHead) + len;
 	head._op = op;
-	head._timestamp = now();
 	_send_cache.append((const char *)&head, sizeof(MsgHead));
 	if (data && len) {
 		_send_cache.append(data, len);
@@ -148,6 +161,8 @@ void Handle::update() {
 		for (size_t i = 0; i < len; ++i) {
 			// todo: call the on msg function
 			MsgHead *msg = (MsgHead *)packet[i];
+			_total_recv_bytes += msg->_size;
+
 			if (msg->_op == PING_MSG_ID) {
 				ping_back();
 			} else {
@@ -169,7 +184,7 @@ double Handle::avg_recv_flow() const {
 }
 
 void Handle::update_ping() {
-	const static uint64_t s_ping_itv = 30000;
+	const static uint64_t s_ping_itv = 1000;
 	if ((ms_proccess() - _last_ping_send_time) < s_ping_itv) return;
 
 	_last_ping_send_time = ms_proccess();

@@ -35,12 +35,12 @@ private:
 
 		char* recv_ptr() const {
 			assert(_packet_len >= _recved_len);
-			return _packet_len ? _recv_ptr +  _recved_len : (char *)&_packet_len;
+			return (_recved_len >= 4 && _packet_len) ? _recv_ptr +  _recved_len : (char *)&_packet_len + _recved_len;
 		}
 
 		size_t recv_len() const {
 			assert(_packet_len >= _recved_len);
-			return _packet_len ? _packet_len - _recved_len : sizeof(_packet_len);
+			return (_recved_len >= 4 && _packet_len) ? _packet_len - _recved_len : sizeof(_packet_len) - _recved_len;
 		}
 
 		bool complete(size_t sz) {
@@ -63,14 +63,14 @@ private:
 				return false;
 			} else {
 				// not happend.
-				assert(false && "logic error.");
+				//assert(false && "logic error.");
 				return false;
 			}
 
 			return false;
 		}
 
-		bool bad_packet() const { return _packet_len && _recved_len && !_recv_ptr;  }
+		bool bad_packet() const { return _packet_len && _recved_len >= 4 && !_recv_ptr;  }
 	};
 
 public:

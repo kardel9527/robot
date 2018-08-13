@@ -140,6 +140,16 @@ namespace luawrapper {
 		}
 	};
 
+	template<> struct object2lua<void *> {
+		static void push(lua_State *L, void *t) {
+			if (t) {
+				lua_pushlightuserdata(L, t);
+			} else {
+				lua_pushnil(L);
+			}
+		}
+	};
+
 	template<typename T> struct object2lua<T &> {
 		static void push(lua_State *L, T &t) {
 			static_assert(std::is_class<typename std::remove_reference<T>::type>::value || std::is_union<typename std::remove_reference<T>::type>::value, "error type!");

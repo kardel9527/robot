@@ -161,5 +161,4 @@ namespace luawrapper {
 	template<> void push(lua_State *L, float val) { lua_pushnumber(L, val); }
 	template<> void push(lua_State *L, double val) { lua_pushnumber(L, val); }
 	template<> void push(lua_State *L, const char *val) { lua_pushstring(L, val); }
-
 } // end namespace luawrapper

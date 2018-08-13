@@ -18,6 +18,7 @@
       <Filter>net</Filter>
     </ClInclude>
     <ClInclude Include="timeutil.h" />
+    <ClInclude Include="md5.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="net\proactor.cpp">
@@ -30,5 +31,6 @@
     <ClCompile Include="luawrapper.cpp" />
     <ClCompile Include="robot.cpp" />
     <ClCompile Include="timeutil.cpp" />
+    <ClCompile Include="md5.c" />
   </ItemGroup>
 </Project>

@@ -6,14 +6,14 @@
 struct MsgHead {
 	unsigned _size;
 	short _op;
-	int _rpc_id;
-	int64_t _timestamp;
+	//int _rpc_id;
+	//int64_t _timestamp;
 	MsgHead() { memset(this, 0, sizeof(*this)); }
 
-	const char* data() const { return (const char*)this + sizeof(*this); }
-	unsigned len() const { return _size - sizeof(*this); }
+	short opcode() const { return _op;  }
+	void* data() const { return (void *)((const char*)&_size + sizeof(MsgHead)); }
+	unsigned len() const { return _size - sizeof(MsgHead); }
 };
-
 #pragma pack(pop)
 
 #endif // __PACKET_H_
